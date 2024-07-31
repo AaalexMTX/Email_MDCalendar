@@ -6,30 +6,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type CfgInput struct {
-	Server server `mapstructure:"server"`
-	Info   info   `mapstructure:"info"`
-}
-
-type server struct {
-	Smtp string `mapstructure:"smtp"`
-	Port int    `mapstructure:"port"`
-}
-
-type info struct {
-	From     string `mapstructure:"from"`
-	To       string `mapstructure:"to"`
-	AuthCode string `mapstructure:"auth_code"`
-}
-
 // SetUpConfig 加载配置到内存
-func SetUpConfig(cfg *CfgInput) error {
+func (cfg *Core) SetUpConfig() error {
 	// 初始化配置读取器
 	vp := viper.New()
 	vp.SetConfigName("config")
 	vp.SetConfigType("toml")
 	// 指定配置文件路径(相对于main.go所在路径)
-	vp.AddConfigPath("./config")
+	vp.AddConfigPath("./app")
 	// 查找并读取配置文件
 	err := vp.ReadInConfig()
 	if err != nil {

@@ -1,6 +1,5 @@
-# email_mdCalendar
-定时（月度）邮件推送当月markdown版，可导入日历表格
-
+# Email_MDCalendar
+定时（月度）邮件推送 当月markdown版，可导入日历表格
 
 ## config 配置参数设置
 | 参数           | 含义      | 示例            |
