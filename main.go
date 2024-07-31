@@ -2,31 +2,31 @@ package main
 
 import (
 	"crypto/tls"
+	"email_mdCalendar/config"
 	"fmt"
 	gomail "gopkg.in/mail.v2"
 )
 
-type configInput struct {
-	from     string
-	to       string
-	authCode string
-}
-
-const (
-	from               = "2323426610@qq.com"
-	to                 = "2323426610@qq.com"
-	authorization_code = ""
-)
-
+// main
+// 日志文件读取
+// 兼容 md生成程序（用go重写）
+// 定时发送系统
 func main() {
+	// 配置读取
+	cfg := config.CfgInput{}
+	err := config.SetUpConfig(&cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	msg := gomail.NewMessage()
 	// 设置消息结构
-	msg.SetHeader("From", from)
-	msg.SetHeader("To", to)
-	msg.SetHeader("Subject", "contents")
-	msg.SetBody("text/plain", "test")
+	msg.SetHeader("From", cfg.Info.From)
+	msg.SetHeader("To", cfg.Info.To)
+	msg.SetHeader("Subject", "contents-2")
+	msg.SetBody("text/plain", "test2--markdown")
 	// 设置连接信息
-	d := gomail.NewDialer("smtp.qq.com", 465, from, authorization_code)
+	d := gomail.NewDialer(cfg.Server.Smtp, cfg.Server.Port, cfg.Info.From, cfg.Info.AuthCode)
 	d.TLSConfig = &tls.Config{
 		InsecureSkipVerify: true,
 	}

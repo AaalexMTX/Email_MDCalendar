@@ -1,4 +1,8 @@
-form="2323426610@qq.com"
-to="2323426610@qq.com"
-authorization_code=""
+[info]
+from="xx@qq.com"    # 发件人邮箱
+to="xx@qq.com"      # 收件人邮箱
+auth_code=""        # 发件人邮箱的授权码
 
+[server]
+smtp="smtp.qq.com"   # 邮件服务器地址
+port=465             # 邮件服务器端口
