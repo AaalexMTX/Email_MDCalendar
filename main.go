@@ -1,8 +1,6 @@
 package main
 
-import (
-	"email_mdCalendar/app"
-)
+import "email_mdCalendar/app"
 
 // main
 // 日志文件读取
@@ -10,6 +8,7 @@ import (
 // 定时发送系统
 func main() {
 	// 启动程序
-	app.Start()
-
+	if err := app.Start(); err != nil {
+		panic(err)
+	}
 }

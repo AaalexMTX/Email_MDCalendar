@@ -1,0 +1,19 @@
+[info]
+    from="2323426610@qq.com"        # 发件人邮箱
+    to="2323426610@qq.com"          # 收件人邮箱
+    auth_code="vpflbonsckludhfj"    # 发件人邮箱的授权码
+
+[server]
+    smtp="smtp.qq.com"          # 邮件服务器地址
+    port=465                    # 邮件服务器端口
+
+[timer]     # 定时器
+    timed_task = true                   # 是否启用定时任务
+    start_time = "2024-01-01 00:00:00"  # 定时任务开始时间
+    [timer.time_interval]               # 定时任务间隔时间
+        year = 0        #（年）
+        month = 1       #（月）
+        day = 0         #（天）
+        hour = 1       # (时）
+        minute = 0      #（分）
+        second = 0      #（秒）

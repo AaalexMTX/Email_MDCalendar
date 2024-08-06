@@ -4,43 +4,52 @@ import (
 	"crypto/tls"
 	"email_mdCalendar/app/config"
 	"email_mdCalendar/app/message"
+	"email_mdCalendar/app/time"
 	"fmt"
 	gomail "gopkg.in/mail.v2"
 )
 
 // Core 应用内核结构
 type Core struct {
-	cfg config.Core
-	msg message.Core
+	msgChan <-chan struct{}
+	cfg     *config.Core
+	msg     *message.Core
+	timer   *time.Core
 	// logger
 }
 
-func Start() {
-	// 初始化配置内核
-	cfg := config.NewCore()
+// Start 启动应用程序
+func Start() error {
+	app := NewCore()
 	// 配置读取
-	if err := cfg.SetUpConfig(); err != nil {
+	if err := app.cfg.SetUpConfig(); err != nil {
 		panic(err)
-		return
+		return err
 	}
 
-	// 设备消息内核
-	msg := message.NewCore()
-	msg.SetEmail()
-	app := NewCore(cfg, msg)
+	// 设置消息体
+	app.msg.SetEmail()
 	// 发送邮件
 	if err := app.SendMessage(); err != nil {
-		fmt.Printf("%s happen %s", "SendMessage", err.Error())
-		return
+		return err
 	}
 	fmt.Printf("send successful")
+	return nil
 }
 
 // NewCore 初始化应用内核
-func NewCore(cfg *config.Core, msg *message.Core) *Core {
+func NewCore() *Core {
+	// 初始化配置内核
+	cfg := config.NewCore()
+	// 初始化设备消息内核
+	msg := message.NewCore()
+	// 初始化时间内核
+	t := time.NewCore()
 	return &Core{
-		cfg: *cfg,
-		msg: *msg,
+		msgChan: make(chan struct{}),
+		cfg:     cfg,
+		msg:     msg,
+		timer:   t,
 	}
 }
 
