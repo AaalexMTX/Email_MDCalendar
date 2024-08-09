@@ -25,7 +25,8 @@ func (c *Core) SetSubject() error {
 
 // SetBody setBody 设置邮件内容
 func (c *Core) SetBody() error {
-	data := "normal text test"
+	//data := "normal text test"
+	data := time.Now().String()
 	c.Body = data
 	return nil
 }

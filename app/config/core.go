@@ -22,18 +22,18 @@ type info struct {
 
 // timer 定时邮件任务配置
 type timer struct {
-	Enable    bool     `mapstructure:"timed_task"`    // 是否启用定时任务
+	Count     int      `mapstructure:"task_count"`    // 定时任务次数
 	Starts    string   `mapstructure:"start_time"`    // 定时任务开始时间
 	Frequency interval `mapstructure:"time_interval"` // 定时任务频率
 }
 
 type interval struct {
-	Year   string `mapstructure:"year"`
-	Month  string `mapstructure:"month"`
-	Day    string `mapstructure:"day"`
-	Hour   string `mapstructure:"hour"`
-	Minute string `mapstructure:"minute"`
-	Second string `mapstructure:"second"`
+	Year   int `mapstructure:"year"`
+	Month  int `mapstructure:"month"`
+	Day    int `mapstructure:"day"`
+	Hour   int `mapstructure:"hour"`
+	Minute int `mapstructure:"minute"`
+	Second int `mapstructure:"second"`
 }
 
 // NewCore 初始化配置结构
