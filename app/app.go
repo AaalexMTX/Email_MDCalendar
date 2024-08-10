@@ -7,6 +7,8 @@ import (
 	checktime "email_mdCalendar/app/time"
 	"fmt"
 	gomail "gopkg.in/mail.v2"
+	"sync"
+	"time"
 )
 
 // Core 应用内核结构
@@ -14,8 +16,9 @@ type Core struct {
 	cfg        *config.Core
 	msg        *message.Core
 	timer      *checktime.Core
-	msgChan    <-chan struct{}
+	msgChan    chan time.Time
 	emailCount int
+	wg         sync.WaitGroup // 等待资源释放
 	// logger
 }
 
@@ -23,23 +26,20 @@ type Core struct {
 func Start() error {
 	// 创建应用内核
 	app := NewCore()
+	defer app.Close()
 	// 读取配置文件并初始化内核设置
 	if err := app.SetUpConfig(); err != nil {
 		return err
 	}
+
+	go app.WaitMessageSingle()
+
 	// TODO: 放进 启动邮件发送定时器
 	app.timer.StartTimer(app.cfg)
 
 	//校验时间，对齐第一次发送时间
-	if app.timer.ConsistentTime() {
-		// 发送邮件
-		if err := app.SendMessage(); err != nil {
-			return err
-		}
-		app.emailCount++
-	} else {
-		fmt.Println("time Out")
-	}
+	app.timer.ConsistentTime(app.msgChan)
+
 	// 发送次数未到 或 需一直发送，则循环
 	for ; app.emailCount <= app.cfg.Timer.Count || app.cfg.Timer.Count < 0; app.emailCount++ {
 		// TODO: 开启循环计时器，等待发送邮件
@@ -60,12 +60,17 @@ func NewCore() *Core {
 	t := checktime.NewCore()
 	// 返回应用内核
 	return &Core{
-		msgChan:    make(chan struct{}),
+		msgChan:    make(chan time.Time),
 		emailCount: 0,
 		cfg:        cfg,
 		msg:        msg,
 		timer:      t,
 	}
+}
+
+// Close 关闭应用内核,释放资源
+func (c *Core) Close() {
+	close(c.msgChan)
 }
 
 // SetUpConfig 读入设置内核结构
@@ -84,6 +89,20 @@ func (c *Core) SetUpConfig() error {
 	}
 
 	return nil
+}
+
+// WaitMessageSingle 接收消息
+func (c *Core) WaitMessageSingle() {
+	for {
+		if receiveSingleTime, ok := <-c.msgChan; ok {
+			// 发送邮件
+			if err := c.SendMessage(); err != nil {
+			}
+			// 成功发送消息
+			fmt.Printf("Email --%02d-- send successful in %v\n", c.emailCount, receiveSingleTime)
+			c.emailCount++
+		}
+	}
 }
 
 // SendMessage 发送邮件
