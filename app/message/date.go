@@ -1,4 +1,4 @@
-package checktime
+package message
 
 // NewDateWithParams 含参创建结构
 func NewDateWithParams(year, month int) *Date {

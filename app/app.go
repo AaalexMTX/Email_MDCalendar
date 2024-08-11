@@ -6,6 +6,7 @@ import (
 	"email_mdCalendar/app/message"
 	checktime "email_mdCalendar/app/time"
 	"fmt"
+	"github.com/pkg/errors"
 	gomail "gopkg.in/mail.v2"
 	"sync"
 	"time"
@@ -38,7 +39,9 @@ func Start() error {
 	app.timer.StartTimer(app.cfg)
 
 	//校验时间，对齐第一次发送时间
-	app.timer.ConsistentTime(app.msgChan)
+	if !app.timer.ConsistentTime(app.msgChan) {
+		return errors.Errorf("set first send time error")
+	}
 
 	// 发送次数未到 或 需一直发送，则循环
 	for ; app.emailCount <= app.cfg.Timer.Count || app.cfg.Timer.Count < 0; app.emailCount++ {
@@ -60,7 +63,7 @@ func NewCore() *Core {
 	t := checktime.NewCore()
 	// 返回应用内核
 	return &Core{
-		msgChan:    make(chan time.Time),
+		msgChan:    make(chan time.Time, 2),
 		emailCount: 0,
 		cfg:        cfg,
 		msg:        msg,
@@ -97,6 +100,9 @@ func (c *Core) WaitMessageSingle() {
 		if receiveSingleTime, ok := <-c.msgChan; ok {
 			// 发送邮件
 			if err := c.SendMessage(); err != nil {
+				fmt.Printf("Email --%02d-- send failed in %v\n", c.emailCount, receiveSingleTime)
+				close(c.msgChan)
+				return
 			}
 			// 成功发送消息
 			fmt.Printf("Email --%02d-- send successful in %v\n", c.emailCount, receiveSingleTime)

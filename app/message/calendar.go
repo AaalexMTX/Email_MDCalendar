@@ -1,4 +1,4 @@
-package checktime
+package message
 
 // NewCalendar 无参构建日历结构
 func NewCalendar() *Calendar {

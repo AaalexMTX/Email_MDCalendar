@@ -21,14 +21,22 @@ func (c *Core) ConsistentTime(ch chan time.Time) bool {
 	}
 	// 首次校时定时器
 	consistentTimer := time.NewTimer(c.start.Sub(now))
-	for {
-		var ctime time.Time
-		ctime = <-consistentTimer.C
-		// 向通道发送校时后的时间，用作发送邮件的信号
-		ch <- ctime
-		fmt.Println("\nfirst consistent in --> ", ctime)
-		return true
-	}
+	// 将差时计时器的内容(差时计时器触发时间)，读出后再写入消息 channel中
+	// 1. chan内容传递有点问题
+	//ch <- <-consistentTimer.C
+
+	// 2. ok
+	//if sendTime, ok := <-consistentTimer.C; ok {
+	//	ch <- sendTime
+	//}
+	//return true
+
+	var ctime time.Time
+	ctime = <-consistentTimer.C
+	// 向通道发送校时后的时间，用作发送邮件的信号
+	ch <- ctime
+	fmt.Println("\nfirst consistent in --> ", ctime)
+	return true
 }
 
 // CycleTime 循环间隔设定时间发送
@@ -43,8 +51,8 @@ func (c *Core) LoadTimer(cfg *config.Core) error {
 	// 解析配置文件中设置的起始时间
 	/*
 	 默认使用当前所在的时区解析时间！！！！
-	 否则以Asia/Shanghai为例
-	 由于默认使用UTC，即GMT时间
+	 否则以 Asia/Shanghai 为例
+	 由于默认使用 UTC，即GMT时间
 	 解析出来的时间会较于实际时间滞后8小时
 	*/
 	c.start, err = time.ParseInLocation(time.DateTime, cfg.Timer.Starts, time.Now().Location())
@@ -52,6 +60,7 @@ func (c *Core) LoadTimer(cfg *config.Core) error {
 	if err != nil {
 		return err
 	}
+
 	// TODO:解析配置文件中设置的发送间隔
 	c.frequency = 12 * time.Second
 	// 下次发送的日期
