@@ -39,16 +39,15 @@ func Start() error {
 	app.timer.StartTimer(app.cfg)
 
 	//校验时间，对齐第一次发送时间
-	if !app.timer.ConsistentTime(app.msgChan) {
+	if !app.timer.ConsistentTime(&app.msgChan) {
 		return errors.Errorf("set first send time error")
 	}
-
+	time.Sleep(10 * time.Second)
 	// 发送次数未到 或 需一直发送，则循环
 	for ; app.emailCount <= app.cfg.Timer.Count || app.cfg.Timer.Count < 0; app.emailCount++ {
 		// TODO: 开启循环计时器，等待发送邮件
 		app.timer.CycleTime()
 	}
-
 	// 正确结束
 	return nil
 }
@@ -96,23 +95,21 @@ func (c *Core) SetUpConfig() error {
 
 // WaitMessageSingle 接收消息
 func (c *Core) WaitMessageSingle() {
-	for {
-		if receiveSingleTime, ok := <-c.msgChan; ok {
-			// 发送邮件
-			if err := c.SendMessage(); err != nil {
-				fmt.Printf("Email --%02d-- send failed in %v\n", c.emailCount, receiveSingleTime)
-				close(c.msgChan)
-				return
-			}
-			// 成功发送消息
-			fmt.Printf("Email --%02d-- send successful in %v\n", c.emailCount, receiveSingleTime)
-			c.emailCount++
+	// 优化
+	fmt.Printf("Waiting Time Signal......\n")
+	for sendSingleTime := range c.msgChan { // 接收到信号
+		c.emailCount++
+		if err := c.SendMessage(sendSingleTime); err != nil {
+			fmt.Printf("Email --%02d-- send failed in %v\n", c.emailCount, sendSingleTime)
+			return
 		}
+		fmt.Printf("Waiting Time Signal......\n")
 	}
+	// 通道关闭，结束
 }
 
 // SendMessage 发送邮件
-func (c *Core) SendMessage() error {
+func (c *Core) SendMessage(sendTime time.Time) error {
 	// 设置邮件内容
 	msg := gomail.NewMessage()
 	// 设置消息结构
@@ -129,6 +126,8 @@ func (c *Core) SendMessage() error {
 	if err := d.DialAndSend(msg); err != nil {
 		return err
 	}
-	fmt.Printf("Email -- %02d -- send successful\n", c.emailCount)
+
+	// 成功发送消息
+	fmt.Printf("Email -- %02d -- send successful in %v\n", c.emailCount, sendTime)
 	return nil
 }
